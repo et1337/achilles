@@ -249,7 +249,7 @@
 		$('#button-men').click(function() { functions.next('#man') });
 		$('#button-women').click(function() { functions.next('#woman') });
 		$('#button-children').click(function() { functions.next('#child') });
-		$('#button-market').click(function() { functions.next('#actions-market') });
+		$('#button-market').click(function() { functions.next('#market') });
 		$('.back').click(function() { functions.back(); });
 		$('#actions-village-next').click(function() { if (!$(this).hasClass('disabled')) functions.next('#actions-village') });
 		$('#actions-man-next').click(function() { if (!$(this).hasClass('disabled')) functions.next('#actions-man') });
@@ -270,7 +270,7 @@
 			{
 				functions.send(
 				{
-					action: state.ui.current_action,
+					'action': state.ui.current_action,
 					targets: Object.keys(state.ui.selected),
 					select: id,
 				});

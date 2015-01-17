@@ -1,9 +1,12 @@
 import gevent
+import gevent.event
 import random
 
 # Callbacks to be set by external code
 send = None
 broadcast = None
+
+commands = {}
 
 market = {
 	'buy':
@@ -250,9 +253,12 @@ def action(world, user_id, data):
 				amount = 1,
 				msg = 'You sell enough materials to build one new hut.'
 			)
-	elif data['action'] == 'task':
-		for target_id in data['people']:
-			pass
+	elif 'targets' in data:
+		targets = data['targets']
+		for target_id in targets:
+			command = commands.get(target_id)
+			if command is not None:
+				command.set(data)
 
 # Processes
 
@@ -297,6 +303,7 @@ def village(world, state):
 
 def human(world, state, action_func, normal_awake_time, food_consumption, water_consumption, waste_production, health_threshold):
 	awake_time = random.randint(0, normal_awake_time)
+	command = commands[state['id']] = gevent.event.AsyncResult()
 	while True:
 		loop_start = world.time
 		health_start = state['health']
@@ -304,8 +311,10 @@ def human(world, state, action_func, normal_awake_time, food_consumption, water_
 		if is_incapacitated(state):
 			gevent.sleep(world_seconds(world, normal_awake_time - awake_time))
 		else:
-			# TODO: await instruction
-			gevent.sleep(world_seconds(world, normal_awake_time - awake_time))
+			task = command.wait(world_seconds(world, normal_awake_time - awake_time))
+			if task is not None:
+				command = commands[state['id']] = gevent.event.AsyncResult()
+				action_func(task)
 
 		awake_time += world.time - loop_start
 
@@ -327,9 +336,6 @@ def human(world, state, action_func, normal_awake_time, food_consumption, water_
 			village['waste'] += waste_production
 			notify(world, village['id'])
 			if state['health'] <= 0:
-				send(state['owner'], { 'event': 'The {1} {0} passes away. The remaining villagers huddle together at a small ceremony.'.format(state['name'], state['type']) })
-				notify_delete(world, state['id'])
-				world.delete(state['id'])
 				break
 			elif state['health'] < health_threshold and health_start >= health_threshold:
 				state['sick'] = True
@@ -338,12 +344,60 @@ def human(world, state, action_func, normal_awake_time, food_consumption, water_
 				state['sick'] = False
 				send(state['owner'], { 'event': '{0} ({1}) has recovered sufficiently to continue work'.format(state['name'], state['type']) })
 			elif state['health'] >= health_threshold:
-				send(state['owner'], { 'event': '{0} ({1}) wakes and requests instruction.'.format(state['name'], state['type']) })
+				send(state['owner'], { 'event': '{0} ({1}) is awake.'.format(state['name'], state['type']) })
 			notify(world, state['id'])
+
+	del commands[state['id']]
+	send(state['owner'], { 'event': 'The {1} {0} passes away. The remaining villagers huddle together at a small ceremony.'.format(state['name'], state['type']) })
+	notify_delete(world, state['id'])
+	world.delete(state['id'])
+
+def work_field(world, state, world_time, result_amount):
+	village = world.village[state['owner']]
+	if village['fields'] > 0:
+		village['fields'] -= 1
+		notify(world, village['id'])
+		state['state'] = 'working'
+		notify(world, state['id'])
+		gevent.sleep(world_seconds(world_time))
+		state['state'] = None
+		notify(world, state)
+		village['food'] += result_amount
+		village['fields'] += 1
+		notify(world, village['id'])
+	else:
+		send(village['id'], { 'event': 'No fields available.' })
 
 def man(world, state):
 	def perform_action(task):
-		pass
+		village = world.village[state['owner']]
+		if task['action'] == 'plow_field':
+			state['state'] = 'plowing'
+			notify(world, state)
+			gevent.sleep(world_seconds(world, 60 * 60 * 17))
+			village['fields'] += 1
+			notify(world, village)
+			state['state'] = None
+			notify(world, state)
+		elif task['action'] == 'build_hut':
+			if village['build_material'] > 0:
+				village['build_material'] -= 1
+				notify(world, village)
+				state['state'] = 'building'
+				notify(world, state)
+				gevent.sleep(world_seconds(world, 60 * 60 * 17))
+				village['huts'] += 1
+				notify(world, village)
+				state['state'] = None
+				notify(world, state)
+			else:
+				send(village['id'], { 'event': 'Not enough material on hand to build a hut.' })
+		elif task['action'] == 'search_water':
+			pass
+		elif task['action'] == 'dig_well':
+			pass
+		elif task['action'] == 'work_field':
+			work_field(world, state, world_time = 60 * 60 * 10, result_amount = 5)
 	human(world, state, perform_action,
 		normal_awake_time = 60 * 60 * 17,
 		food_consumption = 3,
@@ -354,7 +408,12 @@ def man(world, state):
 
 def woman(world, state):
 	def perform_action(task):
-		pass
+		if task['action'] == 'draw_water':
+			pass
+		elif task['action'] == 'medical_care':
+			pass
+		elif task['action'] == 'work_field':
+			work_field(world, state, world_time = 60 * 60 * 10, result_amount = 5)
 	human(world, state, perform_action,
 		normal_awake_time = 60 * 60 * 17,
 		food_consumption = 2,

@@ -1,8 +1,8 @@
 - Immediate todo:
-	- Actions
 	- Village/well distance calculation
 	- Well system
 	- Village dispersal
+	- Medical care
 
 - Resources
 	- Food
