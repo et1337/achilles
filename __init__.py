@@ -26,7 +26,7 @@ app.config.update(
 	ENABLE_BOOTSTRAP = True,
 )
 
-world = state.State()
+world = state.State(720) # 1 game day = 2 real minutes
 
 @app.before_request
 def make_session_permanent():
@@ -72,10 +72,20 @@ def handle_websocket(environ, ws):
 def send_user(id, msg):
 	user_sockets = websockets.get(id)
 	if user_sockets is not None:
+		data = ujson.encode(msg)
 		for sock in user_sockets:
-			sock.send(ujson.encode(msg))
+			sock.send(data)
+
+def broadcast(msg):
+	data = ujson.encode(msg)
+	for user_id in websockets:
+		user_sockets = websockets[user_id]
+		for sock in user_sockets:
+			sock.send(data)
 
 proc.send = send_user
+proc.broadcast = broadcast
+gevent.spawn(proc.timer, world)
 
 @app.route('/')
 def index():

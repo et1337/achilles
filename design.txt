@@ -9,12 +9,6 @@
 
 - Entities
 	- Neighbor village
-	- Field
-		- Max +50 grain/day
-	- Water pack
-		- *2 water
-	- Hut
-		- Consume 2 waste/day
 	- Well
 		- Distance from village
 		- Completeness

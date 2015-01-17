@@ -1,7 +1,35 @@
 <!doctype html>
 <html lang="en">
 	<head>
+		{% raw %}
+		<script id="template-village" type="x-tmpl-mustache">
+			<span class="right" id="time"></span>
+			{{ village.name }}<br />
+			{{ village.grain }}&nbsp;grain
+			{{ village.water }}&nbsp;water
+			{{#village.waste}}{{ village.waste }}&nbsp;waste{{/village.waste}}
+			{{#village.kwacha}}{{ village.kwacha }}&nbsp;waste{{/village.kwacha}}
+			{{#village.huts}}{{ village.huts }} huts{{/village.huts}}
+			{{ village.fields }}&nbsp;fields
+			{{ wells }}&nbsp;wells
+			{{#water_packs}}{{ water_packs }}&nbsp;water&nbsp;packs{{/water_packs}}
+			<hr />
+		</script>
+		<script id="template-villages" type="x-tmpl-mustache">
+			Neighbor villages ({{ villages }})
+		</script>
+		<script id="template-men" type="x-tmpl-mustache">
+			Men ({{ men }})
+		</script>
+		<script id="template-women" type="x-tmpl-mustache">
+			Women ({{ women }})
+		</script>
+		<script id="template-children" type="x-tmpl-mustache">
+			Children ({{ children }})
+		</script>
+		{% endraw %}
 		<script src="{{ url_for('static', filename='jquery.min.js') }}"></script>
+		<script src="{{ url_for('static', filename='mustache.min.js') }}"></script>
 		<script src="{{ url_for('static', filename='main.js') }}"></script>
 		<link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
 		<title>Achilles</title>
@@ -14,15 +42,73 @@
 			<div id="horizontal">
 				<div class="panel">
 					<div class="status" id="status-village"></div>
-					<div id="items-scroll">
-						<div class="items" id="entities">
-							<a>Neighbor villages</a>
-							<a>Fields</a>
-							<a>Huts</a>
-							<a>Wells</a>
-							<a>Men</a>
-							<a>Women</a>
-							<a>Children</a>
+					<div class="items-scroll">
+						<div class="items" id="items-all">
+							<a id="villages">Neighbor villages</a>
+							<a id="men">Men</a>
+							<a id="women">Women</a>
+							<a id="children">Children</a>
+							<a id="market">Market</a>
+						</div>
+					</div>
+				</div>
+				<div id="man" class="panel level1">
+					<div class="status">
+						<a class="left back village-name"></a>
+						Men
+					</div>
+					<div class="items-scroll">
+						<div class="items" id="items-man">
+						</div>
+					</div>
+				</div>
+				<div id="woman" class="panel level1">
+					<div class="status">
+						<a class="left back village-name"></a>
+						Women
+					</div>
+					<div class="items-scroll">
+						<div class="items" id="items-woman">
+						</div>
+					</div>
+				</div>
+				<div id="child" class="panel level1">
+					<div class="status">
+						<a class="left back village-name"></a>
+						Children
+					</div>
+					<div class="items-scroll">
+						<div class="items" id="items-child">
+						</div>
+					</div>
+				</div>
+				<div id="well" class="panel level1">
+					<div class="status">
+						<a class="left back village-name"></a>
+						Wells
+					</div>
+					<div class="items-scroll">
+						<div class="items" id="items-well">
+						</div>
+					</div>
+				</div>
+				<div id="village" class="panel level1">
+					<div class="status">
+						<a class="left back village-name"></a>
+						Neighbor villages
+					</div>
+					<div class="items-scroll">
+						<div class="items" id="items-village">
+						</div>
+					</div>
+				</div>
+				<div id="actions" class="panel level2">
+					<div class="status">
+						<a class="left back" id="action-back"></a>
+						<span id="action-title"></span>
+					</div>
+					<div class="items-scroll">
+						<div class="items" id="items-action">
 						</div>
 					</div>
 				</div>
