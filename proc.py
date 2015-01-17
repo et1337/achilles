@@ -1,17 +1,151 @@
 import gevent
 import random
 
-COST_WATER = 300
-COST_GRAIN = 250
-COST_WATER_PACK = 5000
-COST_BUILD_MATERIAL = 20000
-GAIN_GRAIN = 200
-GAIN_WATER_PACK = 5000
-GAIN_BUILD_MATERIAL = 15000
-
 # Callbacks to be set by external code
 send = None
 broadcast = None
+
+market = {
+	'buy':
+	[
+		{
+			'item': 'water',
+			'cost': 1500,
+			'display': 'Buy 5 H2O',
+		},
+		{
+			'item': 'grain',
+			'cost': 1250,
+			'display': 'Buy 5 grain',
+		},
+		{
+			'item': 'water_pack',
+			'cost': 5000,
+			'display': 'Buy 1 H2O backpack',
+		},
+		{
+			'item': 'build_material',
+			'cost': 20000,
+			'display': 'Buy 1 build material',
+		},
+	],
+	'sell':
+	[
+		{
+			'item': 'grain',
+			'gain': 1000,
+			'display': 'Sell 5 grain',
+		},
+		{
+			'item': 'water_pack',
+			'gain': 5000,
+			'display': 'Sell 1 H2O backpack',
+		},
+		{
+			'item': 'build_material',
+			'gain': 15000,
+			'display': 'Sell 1 build material',
+		},
+	],
+}
+
+actions = {
+	'village':
+	[
+		{
+			'action': 'send_man',
+			'display': 'Send man',
+			'select': 'man',
+		},
+		{
+			'action': 'send_woman',
+			'display': 'Send woman',
+		},
+		{
+			'action': 'send_child',
+			'display': 'Send child',
+		},
+		{
+			'action': 'send_grain',
+			'display': 'Send 5 grain',
+		},
+		{
+			'action': 'send_water',
+			'display': 'Send 5 water',
+		},
+		{
+			'action': 'send_waste',
+			'display': 'Send 5 waste',
+		},
+		{
+			'action': 'send_build_material',
+			'display': 'Send 1 build material',
+		},
+		{
+			'action': 'send_water_pack',
+			'display': 'Send 1 H2O backpack',
+		},
+	],
+	'man':
+	[
+		{
+			'action': 'plow_field',
+			'display': 'Plow (+1 field)',
+		},
+		{
+			'action': 'build_hut',
+			'display': 'Build hut (-1 build materials, +1 hut)',
+		},
+		{
+			'action': 'work_field',
+			'display': 'Work field (+5 grain)',
+		},
+		{
+			'action': 'search_water',
+			'display': 'Search for clean water',
+		},
+		{
+            'action': 'dig_well',
+			'display': 'Work on well',
+			'select': 'well',
+		},
+	],
+	'woman':
+	[
+		{
+			'action': 'work_field',
+			'display': 'Work field (+5 grain)',
+		},
+		{
+			'action': 'draw_water',
+			'display': 'Draw water (+2 H2O)',
+			'select': 'well',
+		},
+		{
+            'action': 'medical_care',
+			'display': 'Medical care (-2 grain, -2 water)',
+		},
+	],
+	'child':
+	[
+		{
+			'action': 'draw_water',
+			'display': 'Draw water (+1 H2O)',
+		},
+	],
+}
+
+actions_lookup = {
+	'village': { x['action']: x for x in actions['village'] },
+	'man': { x['action']: x for x in actions['man'] },
+	'woman': { x['action']: x for x in actions['woman'] },
+	'child': { x['action']: x for x in actions['child'] },
+}
+
+market_lookup = {
+	'buy': { x['item']: x for x in market['buy'] },
+	'sell': { x['item']: x for x in market['sell'] },
+}
 
 # Event handlers
 
@@ -22,6 +156,8 @@ def init(world, id):
 			world.subscribe(id, village_id)
 			if village_id != id:
 				world.subscribe(village_id, id)
+
+		gevent.spawn(well, world, world.create_well(id))
 		for i in xrange(random.randint(3, 8)):
 			gevent.spawn(man, world, world.create_man(id))
 		for i in xrange(random.randint(3, 8)):
@@ -35,19 +171,8 @@ def init(world, id):
 		'village': id,
 		'time_scale': world.time_scale,
 		'time': world.time,
-		'cost':
-		{
-			'water': COST_WATER,
-			'grain': COST_GRAIN,
-			'water_pack': COST_WATER_PACK,
-			'build_material': COST_BUILD_MATERIAL,
-		},
-		'gain':
-		{
-			'grain': GAIN_GRAIN,
-			'water_pack': GAIN_WATER_PACK,
-			'build_material': GAIN_BUILD_MATERIAL,
-		},
+		'market': market,
+		'actions': actions,
 	})
 
 	this_village = world.village[id]
@@ -56,18 +181,20 @@ def init(world, id):
 	for object_id in world.get_user_subscribed_object_ids(id):
 		send(id, world.all[object_id])
 	
-def buy(world, village, cost, resource, amount, msg):
+def buy(world, village, item, amount, msg):
+	cost = market_lookup['buy'][item]['cost']
 	if village['kwacha'] >= cost:
-		village[resource] += amount
+		village[item] += amount
 		village['kwacha'] -= cost
 		send(village['id'], { 'event': msg })
 		notify(world, village['id'])
 	else:
 		send(village['id'], { 'event': 'The merchant takes one look at your coin pouch and laughs you off.' })
 
-def sell(world, village, gain, resource, amount, msg):
-	if village[resource] >= amount:
-		village[resource] -= amount
+def sell(world, village, item, amount, msg):
+	gain = market_lookup['sell'][item]['gain']
+	if village[item] >= amount:
+		village[item] -= amount
 		village['kwacha'] += gain
 		send(village['id'], { 'event': msg })
 		notify(world, village['id'])
@@ -77,54 +204,49 @@ def sell(world, village, gain, resource, amount, msg):
 def action(world, user_id, data):
 	village = world.village[user_id]
 	village['last_action'] = world.time
-	if data['action'] == 'buy':
-		if data['resource'] == 'build_material':
+	if 'action' not in data:
+		print data
+	elif data['action'] == 'buy':
+		if data['item'] == 'build_material':
 			buy(world, village,
-				cost = COST_BUILD_MATERIAL,
-				resource = 'build_material',
+				item = 'build_material',
 				amount = 1,
 				msg = 'You purchase enough material to construct one new hut.'
 			)
-		elif data['resource'] == 'grain':
+		elif data['item'] == 'grain':
 			buy(world, village,
-				cost = COST_GRAIN,
-				resource = 'grain',
-				amount = 1,
+				item = 'grain',
+				amount = 5,
 				msg = 'You purchase a small bag of grain.'
 			)
-		elif data['resource'] == 'water':
+		elif data['item'] == 'water':
 			buy(world, village,
-				cost = COST_WATER,
-				resource = 'water',
-				amount = 1,
+				item = 'water',
+				amount = 5,
 				msg = 'You purchase a small container of pure, clean water.'
 			)
-		elif data['resource'] == 'water_packs':
+		elif data['item'] == 'water_packs':
 			buy(world, village,
-				cost = COST_WATER_PACK,
-				resource = 'water_pack',
+				item = 'water_pack',
 				amount = 1,
 				msg = 'You purchase a PackH2O water backpack.'
 			)
 	elif data['action'] == 'sell':
-		if data['resource'] == 'grain':
+		if data['item'] == 'grain':
 			sell(world, village,
-				gain = GAIN_GRAIN,
-				resource = 'grain',
-				amount = 1,
+				item = 'grain',
+				amount = 5,
 				msg = 'You sell your grain at a slim but reasonable profit.'
 			)
-		elif data['resource'] == 'water_packs':
+		elif data['item'] == 'water_packs':
 			sell(world, village,
-				gain = GAIN_WATER_PACK,
-				resource = 'water_packs',
+				item = 'water_packs',
 				amount = 1,
 				msg = 'You sell a PackH2O water backpack.'
 			)
-		elif data['resource'] == 'build_material':
+		elif data['item'] == 'build_material':
 			sell(world, village,
-				gain = GAIN_BUILD_MATERIAL,
-				resource = 'build_material',
+				item = 'build_material',
 				amount = 1,
 				msg = 'You sell enough materials to build one new hut.'
 			)

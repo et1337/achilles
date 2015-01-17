@@ -16,6 +16,7 @@
 		},
 		ui:
 		{
+			current_action: null,
 			selected: {},
 			width: 0,
 			time: 0,
@@ -27,17 +28,24 @@
 
 	functions.resize = function()
 	{
-		var windowHeight = $(window).innerHeight();
+		var windowHeight = $(window).height();
 		$('#events-scroll').height(windowHeight * 0.2);
 		var eventsHeight = $('#events-scroll').outerHeight();
 		$('#horizontal-scroll').height(windowHeight - eventsHeight);
 		state.ui.width = $(window).width();
 		$('.panel').width(state.ui.width);
-		$('.panel.level1').css('left', state.ui.width);
-		$('.panel.level2').css('left', state.ui.width * 2);
+		functions.update_panel_position(0, $('.level0'));
+		functions.update_panel_position(1, $('.level1'));
+		functions.update_panel_position(2, $('.level2'));
+		functions.update_panel_position(3, $('.level3'));
 		$('.status:not(#status-village)').css('height', $('#status-village').height());
 		$('.items-scroll').height(windowHeight - eventsHeight - $('#status-village').outerHeight());
 		$('#horizontal').css('left', state.ui.level * -state.ui.width);
+	};
+
+	functions.update_panel_position = function(level, $panel)
+	{
+		$panel.css('left', state.ui.width * level);
 	};
 
 	functions.timer = function()
@@ -70,14 +78,14 @@
 		for (var id in all)
 			functions.delete(all[id])
 
-		$('#buy-grain').html(Mustache.render($('#template-buy-grain').html(), data));
-		$('#sell-grain').html(Mustache.render($('#template-sell-grain').html(), data));
-		$('#buy-water').html(Mustache.render($('#template-buy-water').html(), data));
-		$('#sell-water').html(Mustache.render($('#template-sell-water').html(), data));
-		$('#buy-water_pack').html(Mustache.render($('#template-buy-water_pack').html(), data));
-		$('#sell-water_pack').html(Mustache.render($('#template-sell-water_pack').html(), data));
-		$('#buy-build_material').html(Mustache.render($('#template-buy-build_material').html(), data));
-		$('#sell-build_material').html(Mustache.render($('#template-sell-build_material').html(), data));
+		$('#market .items').html(Mustache.render($('#template-items-market').html(), data.market));
+		$('#actions-village .items').html(Mustache.render($('#template-action-items').html(), data.actions.village));
+		$('#actions-man .items').html(Mustache.render($('#template-action-items').html(), data.actions.man));
+		$('#actions-woman .items').html(Mustache.render($('#template-action-items').html(), data.actions.woman));
+		$('#actions-child .items').html(Mustache.render($('#template-action-items').html(), data.actions.child));
+		$('.actions a').click(function() { functions.action($(this).attr('action'), $(this).attr('select')) });
+		$('#market .items .buy').click(function() { functions.buy($(this).attr('item')) });
+		$('#market .items .sell').click(function() { functions.sell($(this).attr('item')) });
 		state.world.village_id = data.village;
 		state.world.time_scale = data.time_scale;
 		var duration = (3600.0 / data.time_scale).toString() + 's';
@@ -87,6 +95,45 @@
 		state.ui.time = data.time;
 		if (should_start_timer)
 			functions.timer();
+	};
+
+	functions.action = function(action, select)
+	{
+		if (select)
+		{
+			state.ui.current_action = action;
+			functions.next('#' + select);
+			var $panel = $('#' + select);
+			$panel.removeClass('level0');
+			$panel.removeClass('level1');
+			$panel.removeClass('level2');
+			$panel.addClass('level3');
+			functions.update_panel_position(3, $panel);
+		}
+		else
+		{
+			functions.send(
+			{
+				'action': action,
+				targets: Object.keys(state.ui.selected),
+			});
+		}
+	};
+
+	functions.buy = function(item)
+	{
+		functions.send({
+			action: 'buy',
+			item: item,
+		});
+	};
+
+	functions.sell = function(item)
+	{
+		functions.send({
+			action: 'sell',
+			item: item,
+		});
 	};
 
 	functions.event = function(data)
@@ -115,10 +162,10 @@
 			};
 			$('.village-name').text(village.name);
 			$('#status-village-contents').html(Mustache.render($('#template-main-village').html(), data));
-			$('#villages').html(Mustache.render($('#template-villages').html(), data));
-			$('#men').html(Mustache.render($('#template-men').html(), data));
-			$('#women').html(Mustache.render($('#template-women').html(), data));
-			$('#children').html(Mustache.render($('#template-children').html(), data));
+			$('#button-villages').html(Mustache.render($('#template-villages').html(), data));
+			$('#button-men').html(Mustache.render($('#template-men').html(), data));
+			$('#button-women').html(Mustache.render($('#template-women').html(), data));
+			$('#button-children').html(Mustache.render($('#template-children').html(), data));
 			$('.status:not(#status-village)').css('height', $('#status-village').height());
 		}
 		functions.update_next_button_state();
@@ -144,6 +191,8 @@
 		}
 		$('#horizontal').animate({ left: state.ui.width * -state.ui.level }, 250, function()
 		{
+			if (state.ui.level <= 2)
+				functions.update_panel_position(1, $('.level3').removeClass('.level3').addClass('.level1').hide());
 			if (state.ui.level <= 1)
 				$('.level2').hide();
 			if (state.ui.level == 0)
@@ -155,17 +204,15 @@
 	{
 		if (data.id != state.world.village_id)
 		{
-			var $dom_element = null;
+			var newHtml = Mustache.render($('#template-' + data.type).html(), data);
+			var $newElement = $(newHtml);
 			if (state.world.all[data.id])
-				$dom_element = $('#' + data.id);
+				$('#' + data.id).replaceWith($newElement);
 			else
-			{
-				var $parent = $('#items-' + data.type);
-				$dom_element = $('<a class-"' + data.type + '" id="' + data.id + '">');
-				$parent.append($dom_element);
-				functions.bind_object_handlers(data.id, $dom_element);
-			}
-			$dom_element.html(Mustache.render($('#template-' + data.type).html(), data));
+				$('#' + data.type + ' .items').append($newElement);
+			functions.bind_object_handlers(data.id, $newElement);
+			if (state.ui.selected[data.id])
+				$newElement.addClass('selected');
 		}
 		state.world.all[data.id] = data;
 		state.world[data.type][data.id] = data;
@@ -198,20 +245,13 @@
 
 	functions.bind_handlers = function()
 	{
-		$('#villages').click(function() { functions.next('#village') });
-		$('#men').click(function() { functions.next('#man') });
-		$('#women').click(function() { functions.next('#woman') });
-		$('#children').click(function() { functions.next('#child') });
+		$('#button-villages').click(function() { functions.next('#village') });
+		$('#button-men').click(function() { functions.next('#man') });
+		$('#button-women').click(function() { functions.next('#woman') });
+		$('#button-children').click(function() { functions.next('#child') });
+		$('#button-market').click(function() { functions.next('#actions-market') });
 		$('.back').click(function() { functions.back(); });
-		$('#market').click(function() { functions.next('#actions-market') });
-		$('#buy-grain').click(function() { functions.send({ 'action': 'buy', 'resource': 'grain' }) });
-		$('#sell-grain').click(function() { functions.send({ 'action': 'sell', 'resource': 'grain' }) });
-		$('#buy-water').click(function() { functions.send({ 'action': 'buy', 'resource': 'water' }) });
-		$('#sell-water').click(function() { functions.send({ 'action': 'sell', 'resource': 'water' }) });
-		$('#buy-water_pack').click(function() { functions.send({ 'action': 'buy', 'resource': 'water_packs' }) });
-		$('#sell-water_pack').click(function() { functions.send({ 'action': 'sell', 'resource': 'water_packs' }) });
-		$('#buy-build_material').click(function() { functions.send({ 'action': 'buy', 'resource': 'build_material' }) });
-		$('#sell-build_material').click(function() { functions.send({ 'action': 'sell', 'resource': 'build_material' }) });
+		$('#actions-village-next').click(function() { if (!$(this).hasClass('disabled')) functions.next('#actions-village') });
 		$('#actions-man-next').click(function() { if (!$(this).hasClass('disabled')) functions.next('#actions-man') });
 		$('#actions-woman-next').click(function() { if (!$(this).hasClass('disabled')) functions.next('#actions-woman') });
 		$('#actions-child-next').click(function() { if (!$(this).hasClass('disabled')) functions.next('#actions-child') });
@@ -219,18 +259,34 @@
 
 	functions.bind_object_handlers = function(id, $object)
 	{
-		$object.click(function() { functions.click_object(id, $object) });
+		$object.click(function() { functions.select(id, $object) });
 	};
 
-	functions.click_object = function(id, $object)
+	functions.select = function(id, $object)
 	{
-		var object = state.world.all[id];
-		$object.toggleClass('selected');
-		if (state.ui.selected[id])
-			delete state.ui.selected[id];
-		else
-			state.ui.selected[id] = true;
-		functions.update_next_button_state();
+		if (!$object.hasClass('disabled'))
+		{
+			if (state.ui.level == 3)
+			{
+				functions.send(
+				{
+					action: state.ui.current_action,
+					targets: Object.keys(state.ui.selected),
+					select: id,
+				});
+				functions.back(1);
+			}
+			else
+			{
+				var object = state.world.all[id];
+				$object.toggleClass('selected');
+				if (state.ui.selected[id])
+					delete state.ui.selected[id];
+				else
+					state.ui.selected[id] = true;
+				functions.update_next_button_state();
+			}
+		}
 	};
 
 	functions.update_next_button_state = function()

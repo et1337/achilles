@@ -72,7 +72,7 @@ hr
 	left: 0px;
 }
 
-.panel.level1, .panel.level2
+.level1, .level2, .level3
 {
 	display: none;
 }
@@ -90,7 +90,7 @@ hr
 	position: absolute;
 }
 
-#items-scroll
+.items-scroll
 {
 	overflow-y: auto;
 }
@@ -105,7 +105,14 @@ hr
 	cursor: pointer;
 }
 
-.items a:hover, .items a:active
+.items a.disabled
+{
+	color: #777;
+	background-image: none;
+	cursor: default;
+}
+
+.items a:hover:not(.disabled), .items a:active:not(.disabled)
 {
 	background-color: #369;
 	color: #fff;
@@ -114,12 +121,14 @@ hr
 .items a.selected
 {
 	background-color: #000;
+	background-image: url(selected.svg);
 	color: #fff;
 }
 
 .items a.selected:hover, .items a.selected:hover
 {
 	background-color: #777;
+	background-image: url(remove.svg);
 	color: #fff;
 }
 
@@ -177,7 +186,7 @@ hr
 	top: 0.5em;
 }
 
-.disabled
+.next.disabled
 {
 	visibility: hidden;
 }

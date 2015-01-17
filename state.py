@@ -17,6 +17,7 @@ class State(object):
 		self.man = {}
 		self.woman = {}
 		self.child = {}
+		self.well = {}
 		self.user_to_object_subscription = {}
 		self.object_to_user_subscription = {}
 	
@@ -50,6 +51,10 @@ class State(object):
 		i['state'] = None
 		i['in_labor'] = False
 		i['sick'] = False
+		return i
+	
+	def create_well(self, owner):
+		i = self.create('well', owner)
 		return i
 	
 	def create_child(self, owner):
