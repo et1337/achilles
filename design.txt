@@ -27,6 +27,7 @@
 		- +3 waste/day
 		- Abilities
 			- Work field (+5 grain)
+			- Plow field
 			- Search for water
 			- Dig well
 	- Women

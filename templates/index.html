@@ -4,18 +4,27 @@
 		<script src="{{ url_for('static', filename='jquery.min.js') }}"></script>
 		<script src="{{ url_for('static', filename='main.js') }}"></script>
 		<link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+		<title>Achilles</title>
 	</head>
 	<body>
 		<div id="events-scroll">
 			<div id="events"></div>
 		</div>
 		<div id="horizontal-scroll">
-			<div class="status"></div>
-			<div id="items-scroll">
-				<div class="items">
-					<a>Work field (+5 grain)</a>
-					<a>Search for water</a>
-					<a>Dig well</a>
+			<div id="horizontal">
+				<div class="panel">
+					<div class="status" id="status-village"></div>
+					<div id="items-scroll">
+						<div class="items" id="entities">
+							<a>Neighbor villages</a>
+							<a>Fields</a>
+							<a>Huts</a>
+							<a>Wells</a>
+							<a>Men</a>
+							<a>Women</a>
+							<a>Children</a>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>

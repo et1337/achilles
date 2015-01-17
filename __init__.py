@@ -5,14 +5,15 @@ import gevent.socket
 gevent.monkey.patch_all()
 
 import os
-
 import gevent.queue
 import gevent.event
 import ujson
-
 import flask
-
 import logging
+import werkzeug.contrib.securecookie
+
+import proc
+import state
 
 app = flask.Flask('achilles')
 
@@ -25,75 +26,60 @@ app.config.update(
 	ENABLE_BOOTSTRAP = True,
 )
 
+world = state.State()
+
 @app.before_request
 def make_session_permanent():
-    flask.session.permanent = True
+	flask.session.permanent = True
+	user_id = flask.session.get('id')
+	if user_id is None:
+		flask.session['id'] = world.create_village()['id']
 
-def handler(environ, start_response):
-	handled = False
-	path = environ['PATH_INFO']
+def wsgi_handler(environ, start_response):
+	path = environ.get('PATH_INFO')
 	if path == '/feed':
 		ws = environ.get('wsgi.websocket')
 		if ws:
-			handle_websocket(ws, path[6:])
-			handled = True
-	
-	if not handled:
-		return app(environ, start_response)
+			return handle_websocket(environ, ws)
+	return app(environ, start_response)
 
 websockets = {}
 
-def handle_websocket(ws, env):
-	if not env:
-		env = BOOTSTRAP_ENV
+def handle_websocket(environ, ws):
+	# Manually load the session
+	class FakeRequest(object):
+		pass
+	fakeRequest = FakeRequest()
+	fakeRequest.cookies = werkzeug.utils.parse_cookie(environ)
+	session = app.session_interface.open_session(app, fakeRequest)
 
-	s = websockets.get(env)
-	if s is None:
-		s = websockets[env] = []
-	s.append(ws)
-
-	s.send(ujson.encode({'test': 'yo'}))
-
+	user_id = session['id']
+	user_sockets = websockets.get(user_id)
+	if user_sockets is None:
+		user_sockets = websockets[user_id] = []
+	user_sockets.append(ws)
+	proc.init(world, user_id)
 	while True:
 		buf = ws.receive()
 		if buf is None:
 			break
+		elif buf:
+			proc.action(world, user_id, ujson.decode(buf))
+	user_sockets.remove(ws)
+	if len(user_sockets) == 0:
+		del websockets[user_id]
 
-	if ws in s:
-		s.remove(ws)
+def send_user(id, msg):
+	user_sockets = websockets.get(id)
+	if user_sockets is not None:
+		for sock in user_sockets:
+			sock.send(ujson.encode(msg))
 
-@app.route('/feed')
-def feed(env = None):
-	flask.abort(400)
-
-greenlets = {}
-
-def broadcast(env, packet):
-	sockets = websockets.get(env)
-	if sockets is not None:
-		packet = ujson.encode(packet)
-		for ws in list(sockets):
-			if ws.socket is not None:
-				try:
-					ws.send(packet)
-				except gevent.socket.error:
-					if ws in sockets:
-						sockets.remove(ws)
-
-@app.route('/test', methods = ['POST'])
-def test():
-	return ujson.encode(
-	{
-		'status': 'ok'
-	})
+proc.send = send_user
 
 @app.route('/')
 def index():
 	return flask.render_template('index.html')
-
-@app.template_filter('urlquote')
-def urlquote(url):
-	return urllib.quote(url, '')
 
 @app.route('/favicon.ico')
 def favicon():
@@ -113,7 +99,7 @@ if __name__ == '__main__':
 		app.config.from_pyfile(sys.argv[1])
 
 	host = '0.0.0.0'
-	port = 5000
+	port = 4000
 
 	server_name = app.config.get('SERVER_NAME')
 	if server_name is not None and ':' in server_name:
@@ -138,9 +124,6 @@ if __name__ == '__main__':
 	
 	app.logger.info('Listening on %s:%d' % (host, port))
 
-	final_handler = handler
-	if app.debug:
-		from werkzeug.debug import DebuggedApplication
-		final_handler = DebuggedApplication(handler, True)
+	final_handler = wsgi_handler
 	server = gevent.pywsgi.WSGIServer((host, port), final_handler, handler_class = geventwebsocket.handler.WebSocketHandler, log = log)
 	server.serve_forever()
