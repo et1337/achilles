@@ -1,1 +1,23 @@
-Hello
+<!doctype html>
+<html lang="en">
+	<head>
+		<script src="{{ url_for('static', filename='jquery.min.js') }}"></script>
+		<script src="{{ url_for('static', filename='main.js') }}"></script>
+		<link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+	</head>
+	<body>
+		<div id="events-scroll">
+			<div id="events"></div>
+		</div>
+		<div id="horizontal-scroll">
+			<div class="status"></div>
+			<div id="items-scroll">
+				<div class="items">
+					<a>Work field (+5 grain)</a>
+					<a>Search for water</a>
+					<a>Dig well</a>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

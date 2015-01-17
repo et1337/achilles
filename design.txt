@@ -26,7 +26,6 @@
 		- -3 food/day
 		- +3 waste/day
 		- Abilities
-			- Plow field (requires cow and plow)
 			- Work field (+5 grain)
 			- Search for water
 			- Dig well
@@ -57,6 +56,7 @@
 	- Sell 1 water - 200 kwacha
 	- Buy 1 water - 300 kwacha
 	- Buy 1 water pack - 5000 kwacha
+	- Buy materials for one hut - 10000 kwacha
 	- Buy 1 water pump - 20000 kwacha
 
 - Events
@@ -70,6 +70,11 @@
 
 - Start with
 	- 3 fields
+	- 4 huts
+	- 8 men
+	- 8 women
+	- 32 children
+	- 1 well
 
 - Multiplayer events
 	- Send entity

@@ -1,0 +1,71 @@
+@font-face
+{
+    font-family: 'PT Serif';
+    font-style: normal;
+    font-weight: 400;
+    src: local('PT Serif'), local('PTSerif-Regular'), url(PT_Serif-Web-Regular.ttf) format('ttf');
+}
+@font-face
+{
+    font-family: 'PT Serif';
+    font-style: normal;
+    font-weight: 700;
+    src: local('PT Serif Bold'), local('PTSerif-Bold'), url(PT_Serif-Web-Bold.ttf) format('ttf');
+}
+@font-face
+{
+    font-family: 'PT Serif';
+    font-style: italic;
+    font-weight: 400;
+    src: local('PT Serif Italic'), local('PTSerif-Italic'), url(PT_Serif-Web-Italic.ttf) format('ttf');
+}
+
+body, html
+{
+	padding: 0px;
+	margin: 0px;
+	font-family: 'PT Serif', serif;
+	color: #369;
+	font-size: large;
+}
+
+#events-scroll
+{
+	overflow-y: auto;
+	background-color: #369;
+	color: #fff;
+}
+
+#events
+{
+}
+
+.status
+{
+	padding: 0.5em;
+	box-shadow: 0px 0px 1em rgba(0, 0, 0, 0.5);
+}
+
+#horizontal-scroll
+{
+	overflow-x: hidden;
+	overflow-y: hidden;
+}
+
+#items-scroll
+{
+	overflow-y: auto;
+}
+
+.items a
+{
+	display: block;
+	padding: 0.5em;
+}
+
+.items a:hover, .items a:active
+{
+	background-color: #369;
+	cursor: pointer;
+	color: #fff;
+}

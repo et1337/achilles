@@ -52,6 +52,8 @@ def handle_websocket(ws, env):
 		s = websockets[env] = []
 	s.append(ws)
 
+	s.send(ujson.encode({'test': 'yo'}))
+
 	while True:
 		buf = ws.receive()
 		if buf is None:
