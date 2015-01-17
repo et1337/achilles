@@ -5,13 +5,14 @@
 		<script id="template-main-village" type="x-tmpl-mustache">
 			{{ village.name }}<br />
 			{{ village.grain }}&nbsp;grain
-			{{ village.water }}&nbsp;h2o
+			{{ village.water }}&nbsp;H2O
 			{{#village.waste}}{{ village.waste }}&nbsp;waste{{/village.waste}}
-			{{#village.kwacha}}{{ village.kwacha }}&nbsp;waste{{/village.kwacha}}
+			{{#village.kwacha}}{{ village.kwacha }}&nbsp;kwacha{{/village.kwacha}}
 			{{#village.huts}}{{ village.huts }} huts{{/village.huts}}
 			{{ village.fields }}&nbsp;fields
 			{{ wells }}&nbsp;wells
-			{{#village.water_packs}}{{ village.water_packs }}&nbsp;avail.&nbsp;h2o&nbsp;packs{{/village.water_packs}}
+			{{#village.water_packs}}{{ village.water_packs }}&nbsp;avail.&nbsp;H2O&nbsp;packs{{/village.water_packs}}
+			{{#village.build_material}}{{ village.build_material }}&nbsp;building&nbsp;material{{/village.build_material}}
 		</script>
 
 		<script id="template-villages" type="x-tmpl-mustache">
@@ -38,6 +39,28 @@
 		</script>
 		<script id="template-child" type="x-tmpl-mustache">
 			{{ name }} ({{ health }} hp) {{^state}} (idle){{/state}}{{#state}} ({{ state }}){{/state}}{{#sick}} (incapacitated){{/sick}}
+		</script>
+
+		<script id="template-buy-grain" type="x-tmpl-mustache">
+			Buy 1 grain (-{{ cost.grain }} kwacha)
+		</script>
+		<script id="template-sell-grain" type="x-tmpl-mustache">
+			Sell 1 grain (+{{ cost.grain }} kwacha)
+		</script>
+		<script id="template-buy-water" type="x-tmpl-mustache">
+			Buy 1 H2O (-{{ cost.water }} kwacha)
+		</script>
+		<script id="template-buy-water_pack" type="x-tmpl-mustache">
+			Buy 1 H2O pack (-{{ cost.water_pack }} kwacha)
+		</script>
+		<script id="template-sell-water_pack" type="x-tmpl-mustache">
+			Sell 1 H2O pack (+{{ cost.water_pack }} kwacha)
+		</script>
+		<script id="template-buy-build_material" type="x-tmpl-mustache">
+			Buy 1 build material (-{{ cost.build_material }} kwacha)
+		</script>
+		<script id="template-sell-build_material" type="x-tmpl-mustache">
+			Sell 1 build material (+{{ gain.build_material }} kwacha)
 		</script>
 
 		{% endraw %}
@@ -76,6 +99,7 @@
 					<div class="status">
 						<a class="left back village-name"></a>
 						Men
+						<a id="actions-man-next" class="right next disabled">Tasks</a>
 					</div>
 					<div class="items-scroll">
 						<div class="items" id="items-man">
@@ -86,6 +110,7 @@
 					<div class="status">
 						<a class="left back village-name"></a>
 						Women
+						<a id="actions-woman-next" class="right next disabled">Tasks</a>
 					</div>
 					<div class="items-scroll">
 						<div class="items" id="items-woman">
@@ -96,6 +121,7 @@
 					<div class="status">
 						<a class="left back village-name"></a>
 						Children
+						<a id="actions-child-next" class="right next disabled">Tasks</a>
 					</div>
 					<div class="items-scroll">
 						<div class="items" id="items-child">
@@ -122,13 +148,46 @@
 						</div>
 					</div>
 				</div>
-				<div id="actions" class="panel level2">
+				<div id="actions-market" class="panel level1">
 					<div class="status">
-						<a class="left back" id="action-back"></a>
-						<span id="action-title"></span>
+						<a class="left back village-name"></a>
+						Market
 					</div>
 					<div class="items-scroll">
-						<div class="items" id="items-action">
+						<div class="items">
+							<a id="buy-grain"></a>
+							<a id="sell-grain"></a>
+							<a id="buy-water"></a>
+							<a id="buy-water_pack"></a>
+							<a id="sell-water_pack"></a>
+							<a id="buy-build_material"></a>
+						</div>
+					</div>
+				</div>
+				<div id="actions-man" class="panel level2">
+					<div class="status">
+						<a class="left back">Men</a>
+					</div>
+					<div class="items-scroll">
+						<div class="items">
+						</div>
+					</div>
+				</div>
+				<div id="actions-woman" class="panel level2">
+					<div class="status">
+						<a class="left back">Women</a>
+					</div>
+					<div class="items-scroll">
+						<div class="items">
+						</div>
+					</div>
+				</div>
+				<div id="actions-child" class="panel level2">
+					<div class="status">
+						<a class="left back">Children</a>
+					</div>
+					<div class="items-scroll">
+						<div class="items">
 						</div>
 					</div>
 				</div>

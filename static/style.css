@@ -27,6 +27,13 @@ body, html
 	font-family: 'PT Serif', serif;
 	color: #369;
 	font-size: large;
+	-webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+	cursor: default;
 }
 
 #events-scroll
@@ -104,6 +111,18 @@ hr
 	color: #fff;
 }
 
+.items a.selected
+{
+	background-color: #000;
+	color: #fff;
+}
+
+.items a.selected:hover, .items a.selected:hover
+{
+	background-color: #777;
+	color: #fff;
+}
+
 #events p
 {
 	padding: 0.5em;
@@ -134,11 +153,33 @@ hr
 	color: #fff;
 }
 
+.next
+{
+	color: #369;
+	cursor: pointer;
+	background-image: url(next.svg);
+	background-repeat: no-repeat;
+	background-position: right 0.5em center;
+	padding: 0.5em;
+	padding-right: 1.5em;
+}
+
+.next:hover
+{
+	background-color: #369;
+	color: #fff;
+}
+
 .right
 {
 	position: absolute;
 	right: 0.5em;
 	top: 0.5em;
+}
+
+.disabled
+{
+	visibility: hidden;
 }
 
 /* pie timer */

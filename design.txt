@@ -1,4 +1,8 @@
-- Speed mode for testing
+- Immediate todo:
+	- Actions
+	- Village/well distance calculation
+	- Well system
+	- Village dispersal
 
 - Resources
 	- Food
@@ -52,14 +56,13 @@
 	- Buy 1 water - 300 kwacha
 	- Buy 1 water pack - 5000 kwacha
 	- Buy materials for one hut - 10000 kwacha
-	- Buy 1 water pump - 20000 kwacha
 
 - Events
 	- Child born (woman sick for 3 days before and after)
 	- Well dries up
 	- Village disperses (user quits)
-	- Man/woman/child gets sick
-	- Man/woman/child dies
+	x Man/woman/child gets sick
+	x Man/woman/child dies
 	x Field exhausted
 	x Hut collapses
 
@@ -78,6 +81,8 @@
 	- Receive resource
 
 - Low priority
+	- Add water pumps - 20000 kwacha
+	- Allow recruiting workers
 	- Add cows
 	- Add plows
 	- Add ability to move

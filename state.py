@@ -30,6 +30,7 @@ class State(object):
 		i['kwacha'] = 0
 		i['huts'] = 0
 		i['fields'] = 0
+		i['build_material'] = 0
 		i['last_action'] = self.time + 60 * 120 # Give the user some time to figure out what's going on
 		return i
 	
