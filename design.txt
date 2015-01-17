@@ -37,7 +37,7 @@
 		- 5 health
 		- +1 waste/day
 		- -1 water/day
-		- -1 grain/day
+		- -1 food/day
 		- Draw water (+1 water, -1 health if too far)
 
 - Attributes
@@ -60,8 +60,8 @@
 	- Village disperses (user quits)
 	- Man/woman/child gets sick
 	- Man/woman/child dies
-	- Field exhausted
-	- Hut collapses
+	x Field exhausted
+	x Hut collapses
 
 - Start with
 	- 3 fields

@@ -54,6 +54,7 @@ hr
 	padding: 0.5em;
 	text-align: center;
 	position: relative;
+	border-bottom: 1px solid #ccc;
 }
 
 .panel
@@ -138,4 +139,35 @@ hr
 	position: absolute;
 	right: 0.5em;
 	top: 0.5em;
+}
+
+/* pie timer */
+
+.pie
+{
+	transform-origin: 50% 50%;
+	animation: rota 60s linear infinite;
+	-webkit-animation: rota 60s linear infinite;
+	-moz-animation: rota 60s linear infinite;
+	animation-play-state: running;
+	-webkit-animation-play-state: running;
+	-moz-animation-play-state: running;
+}
+
+@keyframes rota
+{
+	0% { transform: rotate(0deg); }
+	100% { transform: rotate(360deg); }
+}
+
+@-webkit-keyframes rota
+{
+	0% { transform: rotate(0deg); }
+	100% { transform: rotate(360deg); }
+}
+
+@-moz-keyframes rota
+{
+	0% { transform: rotate(0deg); }
+	100% { transform: rotate(360deg); }
 }

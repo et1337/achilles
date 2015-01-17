@@ -2,19 +2,18 @@
 <html lang="en">
 	<head>
 		{% raw %}
-		<script id="template-village" type="x-tmpl-mustache">
-			<span class="right" id="time"></span>
+		<script id="template-main-village" type="x-tmpl-mustache">
 			{{ village.name }}<br />
 			{{ village.grain }}&nbsp;grain
-			{{ village.water }}&nbsp;water
+			{{ village.water }}&nbsp;h2o
 			{{#village.waste}}{{ village.waste }}&nbsp;waste{{/village.waste}}
 			{{#village.kwacha}}{{ village.kwacha }}&nbsp;waste{{/village.kwacha}}
 			{{#village.huts}}{{ village.huts }} huts{{/village.huts}}
 			{{ village.fields }}&nbsp;fields
 			{{ wells }}&nbsp;wells
-			{{#water_packs}}{{ water_packs }}&nbsp;water&nbsp;packs{{/water_packs}}
-			<hr />
+			{{#village.water_packs}}{{ village.water_packs }}&nbsp;avail.&nbsp;h2o&nbsp;packs{{/village.water_packs}}
 		</script>
+
 		<script id="template-villages" type="x-tmpl-mustache">
 			Neighbor villages ({{ villages }})
 		</script>
@@ -27,6 +26,20 @@
 		<script id="template-children" type="x-tmpl-mustache">
 			Children ({{ children }})
 		</script>
+
+		<script id="template-village" type="x-tmpl-mustache">
+			{{ name }}
+		</script>
+		<script id="template-man" type="x-tmpl-mustache">
+			{{ name }} ({{ health }} hp) {{^state}} (idle){{/state}}{{#state}} ({{ state }}){{/state}}{{#sick}} (incapacitated){{/sick}}
+		</script>
+		<script id="template-woman" type="x-tmpl-mustache">
+			{{ name }} ({{ health }} hp) {{^state}} (idle){{/state}}{{#state}} ({{ state }}){{/state}}{{#sick}} (incapacitated){{/sick}} {{#in_labor}} (in labor){{/in_labor}}
+		</script>
+		<script id="template-child" type="x-tmpl-mustache">
+			{{ name }} ({{ health }} hp) {{^state}} (idle){{/state}}{{#state}} ({{ state }}){{/state}}{{#sick}} (incapacitated){{/sick}}
+		</script>
+
 		{% endraw %}
 		<script src="{{ url_for('static', filename='jquery.min.js') }}"></script>
 		<script src="{{ url_for('static', filename='mustache.min.js') }}"></script>
@@ -36,12 +49,19 @@
 	</head>
 	<body>
 		<div id="events-scroll">
-			<div id="events"></div>
+			<div id="events">
+			</div>
 		</div>
 		<div id="horizontal-scroll">
 			<div id="horizontal">
 				<div class="panel">
-					<div class="status" id="status-village"></div>
+					<div class="status" id="status-village">
+						<span id="status-village-contents"></span>
+						<span class="right">
+							<span id="time"></span>
+							<img class="pie" src="{{ url_for('static', filename='clockhand.svg') }}" />
+						</span>
+					</div>
 					<div class="items-scroll">
 						<div class="items" id="items-all">
 							<a id="villages">Neighbor villages</a>

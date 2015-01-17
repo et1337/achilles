@@ -26,7 +26,7 @@ app.config.update(
 	ENABLE_BOOTSTRAP = True,
 )
 
-world = state.State(720) # 1 game day = 2 real minutes
+world = state.State(1440) # 1 game day = 1 minute
 
 @app.before_request
 def make_session_permanent():
