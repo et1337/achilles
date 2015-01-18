@@ -108,15 +108,15 @@ if __name__ == '__main__':
 
 	try:
 		import config_prod
-		settings = { x: getattr(config_prod, x) for x in dir(config_prod) if x[0] != '_' }
-		app.config.update(settings)
+		for setting in (x for x in dir(config_prod) if x[0] != '_'):
+			app.config[setting] = getattr(config_prod, setting)
 	except ImportError:
 		pass
 
 	host = '0.0.0.0'
 	port = 4000
 
-	server_name = app.config.get('SERVER_NAME')
+	server_name = app.config.get('LISTEN')
 	if server_name is not None and ':' in server_name:
 		server_name = server_name.split(':')
 		host = server_name[0]
