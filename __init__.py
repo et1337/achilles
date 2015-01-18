@@ -108,7 +108,8 @@ if __name__ == '__main__':
 
 	try:
 		import config_prod
-		app.config.from_object(config_prod)
+		settings = { x: getattr(config_prod, x) for x in dir(config_prod) if x[0] != '_' }
+		app.config.update(settings)
 	except ImportError:
 		pass
 
