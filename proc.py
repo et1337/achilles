@@ -167,12 +167,13 @@ MARKET_LOOKUP = {
 # Event handlers
 
 def init(world, id):
-	if world.village.get(id) is None:
+	village_instance = world.village.get(id)
+	if village_instance is None:
 		village_instance = world.create_village(id)
 		gevent.spawn(village, world, village_instance)
-		notify(world, id)
+		notify(world, village_instance['id'])
 		for village_id in world.village:
-			if village_id != id:
+			if village_id != village_instance['id']:
 				send(village_id, { 'events': 'The nearby village of {0} establishes contact.'.format(village_instance['name']) })
 
 		if len(world.well) == 0:
@@ -181,19 +182,19 @@ def init(world, id):
 			notify(world, instance['id'])
 
 		for i in xrange(random.randint(3, 8)):
-			instance = world.create_man(id)
+			instance = world.create_man(village_instance['id'])
 			gevent.spawn(man, world, instance)
 			notify(world, instance['id'])
 		for i in xrange(random.randint(3, 8)):
-			instance = world.create_woman(id)
+			instance = world.create_woman(village_instance['id'])
 			gevent.spawn(woman, world, instance)
 			notify(world, instance['id'])
 		for i in xrange(random.randint(5, 12)):
-			instance = world.create_child(id)
+			instance = world.create_child(village_instance['id'])
 			gevent.spawn(child, world, instance)
 			notify(world, instance['id'])
 
-	send(id,
+	send(village_instance['id'],
 	{
 		'init': True,
 		'village': id,
@@ -203,11 +204,10 @@ def init(world, id):
 		'actions': ACTIONS,
 	})
 
-	this_village = world.village[id]
-	send(id, {'event': '{0}, Malawi welcomes you.'.format(this_village['name']) })
+	send(village_instance['id'], {'event': '{0}, Malawi welcomes you.'.format(village_instance['name']) })
 
 	for object_id in world.get_user_subscribed_object_ids(id):
-		send(id, world.all[object_id])
+		send(village_instance['id'], world.all[object_id])
 	
 def buy(world, village, item, amount, msg):
 	cost = MARKET_LOOKUP['buy'][item]['cost']
