@@ -5,6 +5,7 @@ import gevent.socket
 gevent.monkey.patch_all()
 
 import os
+import uuid
 import gevent.queue
 import gevent.event
 import ujson
@@ -34,7 +35,7 @@ def make_session_permanent():
 	flask.session.permanent = True
 	user_id = flask.session.get('id')
 	if user_id is None:
-		flask.session['id'] = world.create_village()['id']
+		flask.session['id'] = uuid.uuid4().hex
 
 def wsgi_handler(environ, start_response):
 	path = environ.get('PATH_INFO')
