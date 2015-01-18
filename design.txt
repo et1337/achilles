@@ -1,8 +1,6 @@
 - Immediate todo:
-	- Village/well distance calculation
-	- Well system
-	- Village dispersal
-	- Medical care
+	- Disease factor
+	- Pregnancy
 
 - Resources
 	- Food

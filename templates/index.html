@@ -9,7 +9,7 @@
 			{{#village.waste}}{{ village.waste }}&nbsp;waste{{/village.waste}}
 			{{#village.kwacha}}{{ village.kwacha }}&nbsp;kwacha{{/village.kwacha}}
 			{{#village.huts}}{{ village.huts }} huts{{/village.huts}}
-			{{ village.fields }}&nbsp;fields
+			{{ village.free_fields }}/{{ village.fields }}&nbsp;fields
 			{{ wells }}&nbsp;wells
 			{{#village.water_packs}}{{ village.water_packs }}&nbsp;avail.&nbsp;H2O&nbsp;packs{{/village.water_packs}}
 			{{#village.build_material}}{{ village.build_material }}&nbsp;building&nbsp;material{{/village.build_material}}
@@ -41,7 +41,7 @@
 			<a id="{{ id }}" class="{{#sick}}disabled{{/sick}}{{#state}} disabled{{/state}}">{{ name }} ({{ health }} hp) {{^state}} (idle){{/state}}{{#state}} ({{ state }}){{/state}}{{#sick}} (incapacitated){{/sick}}</a>
 		</script>
 		<script id="template-well" type="x-tmpl-mustache">
-			<a id="{{ id }}">{{ name }} ({{ distance }} km)</a>
+			<a id="{{ id }}">{{ name }} ({{ complete }}%) ({{ distance }} km) {{#queue}}·{{/queue}}</a>
 		</script>
 
 		<script id="template-items-market" type="x-tmpl-mustache">
@@ -67,129 +67,131 @@
 		<title>Achilles</title>
 	</head>
 	<body>
-		<div id="events-scroll">
-			<div id="events">
+		<div id="container">
+			<div id="events-scroll">
+				<div id="events">
+				</div>
 			</div>
-		</div>
-		<div id="horizontal-scroll">
-			<div id="horizontal">
-				<div class="panel level0">
-					<div class="status" id="status-village">
-						<span id="status-village-contents"></span>
-						<span class="left">
-							<span id="time"></span>
-							<img class="pie" src="{{ url_for('static', filename='clockhand.svg') }}" />
-						</span>
-					</div>
-					<div class="items-scroll">
-						<div class="items">
-							<a id="button-villages">Neighbor villages</a>
-							<a id="button-men">Men</a>
-							<a id="button-women">Women</a>
-							<a id="button-children">Children</a>
-							<a id="button-market">Market</a>
+			<div id="horizontal-scroll">
+				<div id="horizontal">
+					<div class="panel level0">
+						<div class="status" id="status-village">
+							<div>
+								<span id="time"></span>
+								<img class="pie" src="{{ url_for('static', filename='clockhand.svg') }}" />
+							</div>
+							<span id="status-village-contents"></span>
+						</div>
+						<div class="items-scroll">
+							<div class="items">
+								<a id="button-villages">Neighbor villages</a>
+								<a id="button-men">Men</a>
+								<a id="button-women">Women</a>
+								<a id="button-children">Children</a>
+								<a id="button-market">Market</a>
+							</div>
 						</div>
 					</div>
-				</div>
-				<div id="man" class="panel level1">
-					<div class="status">
-						<a class="left back village-name"></a>
-						Men
-						<a id="actions-man-next" class="right next disabled">Tasks</a>
-					</div>
-					<div class="items-scroll">
-						<div class="items">
-							<a class="select-all">(Select all)</a>
+					<div id="man" class="panel level1">
+						<div class="status">
+							<a class="left back village-name"></a>
+							Men
+							<a id="actions-man-next" class="right next disabled">Tasks</a>
+						</div>
+						<div class="items-scroll">
+							<div class="items">
+								<a class="select-all">(Select all)</a>
+							</div>
 						</div>
 					</div>
-				</div>
-				<div id="woman" class="panel level1">
-					<div class="status">
-						<a class="left back village-name"></a>
-						Women
-						<a id="actions-woman-next" class="right next disabled">Tasks</a>
-					</div>
-					<div class="items-scroll">
-						<div class="items">
-							<a class="select-all">(Select all)</a>
+					<div id="woman" class="panel level1">
+						<div class="status">
+							<a class="left back village-name"></a>
+							Women
+							<a id="actions-woman-next" class="right next disabled">Tasks</a>
+						</div>
+						<div class="items-scroll">
+							<div class="items">
+								<a class="select-all">(Select all)</a>
+							</div>
 						</div>
 					</div>
-				</div>
-				<div id="child" class="panel level1">
-					<div class="status">
-						<a class="left back village-name"></a>
-						Children
-						<a id="actions-child-next" class="right next disabled">Tasks</a>
-					</div>
-					<div class="items-scroll">
-						<div class="items">
-							<a class="select-all">(Select all)</a>
+					<div id="child" class="panel level1">
+						<div class="status">
+							<a class="left back village-name"></a>
+							Children
+							<a id="actions-child-next" class="right next disabled">Tasks</a>
+						</div>
+						<div class="items-scroll">
+							<div class="items">
+								<a class="select-all">(Select all)</a>
+							</div>
 						</div>
 					</div>
-				</div>
-				<div id="village" class="panel level1">
-					<div class="status">
-						<a class="left back village-name"></a>
-						Neighbor villages
-					</div>
-					<div class="items-scroll">
-						<div class="items">
+					<div id="village" class="panel level1">
+						<div class="status">
+							<a class="left back village-name"></a>
+							Neighbor villages
+						</div>
+						<div class="items-scroll">
+							<div class="items">
+							</div>
 						</div>
 					</div>
-				</div>
-				<div id="market" class="panel level1">
-					<div class="status">
-						<a class="left back village-name"></a>
-						Market
-					</div>
-					<div class="items-scroll">
-						<div class="items">
+					<div id="market" class="panel level1">
+						<div class="status">
+							<a class="left back village-name"></a>
+							Market
+						</div>
+						<div class="items-scroll">
+							<div class="items">
+							</div>
 						</div>
 					</div>
-				</div>
-				<div id="well" class="panel level1">
-					<div class="status">
-						<a class="left back village-name"></a>
-						Wells
-					</div>
-					<div class="items-scroll">
-						<div class="items">
+					<div id="well" class="panel level1">
+						<div class="status">
+							<a class="left back village-name"></a>
+							Wells
+						</div>
+						<div class="items-scroll">
+							<div class="items">
+							</div>
 						</div>
 					</div>
-				</div>
-				<div id="actions-village" class="actions panel level2">
-					<div class="status">
-						<a class="left back">Neighbor villages</a>
-					</div>
-					<div class="items-scroll">
-						<div class="items">
+					<div id="actions-village" class="actions panel level2">
+						<div class="status">
+							<a class="left back">Neighbor villages</a>
+						</div>
+						<div class="items-scroll">
+							<div class="items">
+							</div>
 						</div>
 					</div>
-				</div>
-				<div id="actions-man" class="actions panel level2">
-					<div class="status">
-						<a class="left back">Men</a>
-					</div>
-					<div class="items-scroll">
-						<div class="items">
+					<div id="actions-man" class="actions panel level2">
+						<div class="status">
+							<a class="left back">Men</a>
+						</div>
+						<div class="items-scroll">
+							<div class="items">
+							</div>
 						</div>
 					</div>
-				</div>
-				<div id="actions-woman" class="actions panel level2">
-					<div class="status">
-						<a class="left back">Women</a>
-					</div>
-					<div class="items-scroll">
-						<div class="items">
+					<div id="actions-woman" class="actions panel level2">
+						<div class="status">
+							<a class="left back">Women</a>
+						</div>
+						<div class="items-scroll">
+							<div class="items">
+							</div>
 						</div>
 					</div>
-				</div>
-				<div id="actions-child" class="actions panel level2">
-					<div class="status">
-						<a class="left back">Children</a>
-					</div>
-					<div class="items-scroll">
-						<div class="items">
+					<div id="actions-child" class="actions panel level2">
+						<div class="status">
+							<a class="left back">Children</a>
+						</div>
+						<div class="items-scroll">
+							<div class="items">
+							</div>
 						</div>
 					</div>
 				</div>

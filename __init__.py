@@ -24,9 +24,10 @@ app.config.update(
 	LOG_FORMAT = '%(asctime)s %(name)s\t%(levelname)s\t%(message)s',
 	LOG_LEVEL = logging.INFO,
 	ENABLE_BOOTSTRAP = True,
+	TIME_SCALE = 1080,
 )
 
-world = state.State(1440) # 1 game day = 1 minute
+world = state.State()
 
 @app.before_request
 def make_session_permanent():
@@ -133,6 +134,7 @@ if __name__ == '__main__':
 			app.logger.addHandler(handler)
 	
 	app.logger.info('Listening on %s:%d' % (host, port))
+	world.time_scale = app.config['TIME_SCALE']
 
 	final_handler = wsgi_handler
 	server = gevent.pywsgi.WSGIServer((host, port), final_handler, handler_class = geventwebsocket.handler.WebSocketHandler, log = log)

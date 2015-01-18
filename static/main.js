@@ -32,7 +32,7 @@
 		$('#events-scroll').height(windowHeight * 0.2);
 		var eventsHeight = $('#events-scroll').outerHeight();
 		$('#horizontal-scroll').height(windowHeight - eventsHeight);
-		state.ui.width = $(window).width();
+		state.ui.width = $('#container').width();
 		$('.panel').width(state.ui.width);
 		functions.update_panel_position(0, $('.level0'));
 		functions.update_panel_position(1, $('.level1'));
@@ -75,11 +75,14 @@
 		var x1 = data['x'], y1 = data['y'];
 		if (x1 !== undefined && y1 !== undefined)
 		{
-			var village = state.world.village[state.world.village_id];
-			var x_dist = village.x - x1, y_dist = village.y - y1;
-			var newData = $.extend({}, data);
-			newData.distance = Math.floor(Math.sqrt((x_dist * x_dist) + (y_dist * y_dist))) * 0.001;
-			return newData;
+			if (state.world.village_id)
+			{
+				var village = state.world.village[state.world.village_id];
+				var x_dist = village.x - x1, y_dist = village.y - y1;
+				var newData = $.extend({}, data);
+				newData.distance = (Math.sqrt((x_dist * x_dist) + (y_dist * y_dist)) * 0.001).toFixed(2);
+				return newData;
+			}
 		}
 		return data;
 	};
@@ -292,6 +295,8 @@
 		}
 		state.world.all[data.id] = data;
 		state.world[data.type][data.id] = data;
+		if (Object.keys(state.ui.selected).length == 0 && state.ui.level > 1)
+			functions.back(1);
 	};
 
 	functions.delete = function(data)
@@ -301,6 +306,8 @@
 		$('#' + data.id).remove();
 		delete state.world.all[data.id];
 		delete state.world[data.type][data.id];
+		if (Object.keys(state.ui.selected).length == 0 && state.ui.level > 1)
+			functions.back(1);
 	};
 
 	functions.onclose = function()
@@ -327,7 +334,6 @@
 		$('#button-children').click(function() { functions.next('#child') });
 		$('#button-market').click(function() { functions.next('#market') });
 		$('.back').click(function() { functions.back(); });
-		$('#actions-village-next').click(function() { if (!$(this).hasClass('disabled')) functions.next('#actions-village') });
 		$('#actions-man-next').click(function() { if (!$(this).hasClass('disabled')) functions.next('#actions-man') });
 		$('#actions-woman-next').click(function() { if (!$(this).hasClass('disabled')) functions.next('#actions-woman') });
 		$('#actions-child-next').click(function() { if (!$(this).hasClass('disabled')) functions.next('#actions-child') });
@@ -341,22 +347,28 @@
 
 	functions.select = function($object)
 	{
-		if (!$object.hasClass('disabled'))
+		var id = $object.attr('id');
+		if (state.ui.level == 3 && state.ui.current_action)
 		{
-			var id = $object.attr('id');
-			if (state.ui.level == 3 && state.ui.current_action)
+			functions.send(
 			{
-				functions.send(
-				{
-					'action': state.ui.current_action,
-					'targets': Object.keys(state.ui.selected),
-					'select': id,
-				});
-				functions.back(1);
+				'action': state.ui.current_action,
+				'targets': Object.keys(state.ui.selected),
+				'select': id,
+			});
+			functions.back(1);
+		}
+		else if (!$object.hasClass('disabled'))
+		{
+			var object = state.world.all[id];
+			if (object.type == 'village')
+			{
+				state.ui.selected = {};
+				state.ui.selected[id] = true;
+				functions.next('#actions-village');
 			}
 			else
 			{
-				var object = state.world.all[id];
 				$object.toggleClass('selected');
 				if (state.ui.selected[id])
 					delete state.ui.selected[id];

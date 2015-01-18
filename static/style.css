@@ -36,6 +36,13 @@ body, html
 	cursor: default;
 }
 
+#container
+{
+	max-width: 30em;
+	margin-left: auto;
+	margin-right: auto;
+}
+
 #events-scroll
 {
 	overflow-y: auto;
@@ -51,13 +58,9 @@ hr
 	margin-bottom: 0px;
 }
 
-#events, .status
-{
-	color: #777;
-}
-
 .status
 {
+	color: #777;
 	padding: 0.5em;
 	text-align: center;
 	position: relative;
@@ -105,27 +108,27 @@ hr
 	cursor: pointer;
 }
 
-.items a.disabled
+.level1 .items a.disabled, .level1 .items a.disabled:hover, .level1 .items a.disabled:active
 {
 	color: #777;
 	background-image: none;
 	cursor: default;
 }
 
-.items a:hover:not(.disabled), .items a:active:not(.disabled)
+.items a:hover, .items a:active
 {
 	background-color: #369;
 	color: #fff;
 }
 
-.items a.selected
+.items a.selected:not(.disabled)
 {
 	background-color: #000;
 	background-image: url(selected.svg);
 	color: #fff;
 }
 
-.items a.selected:hover, .items a.selected:hover
+.items a.selected:hover:not(.disabled), .items a.selected:hover:not(.disabled)
 {
 	background-color: #777;
 	background-image: url(remove.svg);
@@ -136,6 +139,7 @@ hr
 {
 	padding: 0.5em;
 	margin: 0px;
+	color: #000;
 }
 
 .left
