@@ -34,6 +34,7 @@ class State(object):
 		i['grain'] = 50
 		i['water'] = 50
 		i['water_packs'] = 0
+		i['free_water_packs'] = 0
 		i['waste'] = 0
 		i['kwacha'] = 0
 		i['huts'] = 0
@@ -73,6 +74,7 @@ class State(object):
 		i['y'] = random.randint(-750, 750)
 		i['queue'] = []
 		i['complete'] = complete # 0 to 100
+		i['contamination'] = 0 # 0 to 100
 		return i
 	
 	def create_child(self, owner):

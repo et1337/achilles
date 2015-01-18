@@ -106,8 +106,11 @@ if __name__ == '__main__':
 	import logging
 	import sys
 
-	if len(sys.argv) > 1:
-		app.config.from_pyfile(sys.argv[1])
+	try:
+		import config_prod
+		app.config.from_object(config_prod)
+	except ImportError:
+		pass
 
 	host = '0.0.0.0'
 	port = 4000

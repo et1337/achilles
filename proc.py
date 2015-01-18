@@ -30,12 +30,12 @@ MARKET = {
 		},
 		{
 			'item': 'water_packs',
-			'cost': 5000,
-			'display': 'Buy 1 H2O backpack',
+			'cost': 4000,
+			'display': 'Buy 1 H2O backpack (2x H2O)',
 		},
 		{
 			'item': 'build_material',
-			'cost': 20000,
+			'cost': 15000,
 			'display': 'Buy 1 build material',
 		},
 	],
@@ -91,7 +91,7 @@ ACTIONS = {
 		},
 		{
 			'action': 'build_hut',
-			'display': 'Build hut (-1 build materials, +1 hut)',
+			'display': 'Build hut (-8 waste/day)',
 		},
 		{
 			'action': 'work_field',
@@ -99,7 +99,7 @@ ACTIONS = {
 		},
 		{
 			'action': 'search_water',
-			'display': 'Search for clean water',
+			'display': 'Search for well sites',
 		},
 		{
             'action': 'dig_well',
@@ -173,11 +173,13 @@ def init(world, id):
 		notify(world, id)
 		for village_id in world.village:
 			if village_id != id:
-				send(village_id, { 'events': 'The nearby village of {0} establishes friendly contact.'.format(village_instance['name']) })
+				send(village_id, { 'events': 'The nearby village of {0} establishes contact.'.format(village_instance['name']) })
 
-		instance = world.create_well(id, 100)
-		gevent.spawn(well, world, instance)
-		notify(world, instance['id'])
+		if len(world.well) == 0:
+			instance = world.create_well(id, 100)
+			gevent.spawn(well, world, instance)
+			notify(world, instance['id'])
+
 		for i in xrange(random.randint(3, 8)):
 			instance = world.create_man(id)
 			gevent.spawn(man, world, instance)
@@ -264,11 +266,15 @@ def action(world, user_id, data):
 					msg = 'You purchase a small container of pure, clean water.'
 				)
 			elif data['item'] == 'water_packs':
-				buy(world, village,
-					item = 'water_packs',
-					amount = 1,
-					msg = 'You purchase a PackH2O water backpack.'
-				)
+				cost = MARKET_LOOKUP['buy']['water_packs']['cost']
+				if village['kwacha'] >= cost:
+					village['water_packs'] += 1
+					village['free_water_packs'] += 1
+					village['kwacha'] -= cost
+					send(village['id'], { 'event':  'You purchase a PackH2O water backpack.' })
+					notify(world, village['id'])
+				else:
+					send(village['id'], { 'event': 'The merchant takes one look at your billfold and laughs you off.' })
 		elif data['action'] == 'sell':
 			if data['item'] == 'grain':
 				sell(world, village,
@@ -277,11 +283,15 @@ def action(world, user_id, data):
 					msg = 'You sell your grain at a slim but reasonable profit.'
 				)
 			elif data['item'] == 'water_packs':
-				sell(world, village,
-					item = 'water_packs',
-					amount = 1,
-					msg = 'You sell a PackH2O water backpack.'
-				)
+				gain = MARKET_LOOKUP['sell']['water_packs']['gain']
+				if village['free_water_packs'] >= 1:
+					village['water_packs'] -= 1
+					village['free_water_packs'] -= 1
+					village['kwacha'] += gain
+					send(village['id'], { 'event':  'You sell a PackH2O water backpack.' })
+					notify(world, village['id'])
+				else:
+					send(village['id'], { 'event': 'You don\'t have enough to sell!' })
 			elif data['item'] == 'build_material':
 				sell(world, village,
 					item = 'build_material',
@@ -328,7 +338,7 @@ def village(world, state):
 
 		gevent.sleep(world_seconds(world, 60 * 60 * 2))
 
-		state['waste'] = max(0, state['waste'] - state['huts'] * 2)
+		state['waste'] = max(0, state['waste'] - state['huts'] * 8)
 
 		if state['huts'] > 0 and random.randint(0, 5) == 0:
 			send(state['id'], { 'event': 'A hut finally collapses under its own weight. Hygeine worsens.' })
@@ -436,7 +446,7 @@ def send_human(world, state, village_id):
 	notify_delete(world, state['id'])
 	world.subscribe(new_village['id'], state['id'])
 	world.unsubscribe(old_village['id'], state['id'])
-	send(new_village['id'], { 'event': '{0} is set to arrive soon from the village of {1}.'.format(state['name'], old_village['name']) })
+	send(new_village['id'], { 'event': '{0} ({1}) arrives from the village of {1}.'.format(state['name'], state['type'], old_village['name']) })
 	state['owner'] = new_village['id']
 	state['state'] = 'traveling'
 	notify(world, state['id'])
@@ -468,8 +478,9 @@ def man(world, state):
 				notify(world, village['id'])
 				state['state'] = None
 				notify(world, state['id'])
+				send(village['id'], { 'event': '{0} finished building a hut.'.format(state['name']) })
 			else:
-				send(village['id'], { 'event': 'Not enough material on hand to build a hut.' })
+				send(village['id'], { 'event': 'Not enough build material for a hut.' })
 		elif task['action'] == 'search_water':
 			state['state'] = 'searching'
 			notify(world, state['id'])
@@ -484,18 +495,21 @@ def man(world, state):
 			else:
 				send(state['owner'], { 'event': '{0}\'s search for water is unsuccessful.'.format(state['name']) })
 		elif task['action'] == 'dig_well':
-			state['state'] = 'digging'
-			notify(world, state['id'])
-			gevent.sleep(world_seconds(world, 60 * 60 * 8))
-			state['state'] = None
-			notify(world, state['id'])
 			target_well = world.well.get(task['select'])
 			if target_well is not None:
 				old_complete = target_well['complete']
-				target_well['complete'] = min(100, target_well['complete'] + 15)
-				if old_complete < 100 and target_well['complete'] == 100:
-					send_to_subscribers(world, target_well['id'], { 'event': '{0} is complete.'.format(target_well['name']) })
-				notify(world, target_well['id'])
+				if old_complete == 100:
+					send(state['owner'], { 'event': 'Well is already complete!' })
+				else:
+					state['state'] = 'digging'
+					notify(world, state['id'])
+					gevent.sleep(world_seconds(world, 60 * 60 * 8))
+					state['state'] = None
+					notify(world, state['id'])
+					target_well['complete'] = min(100, target_well['complete'] + 20)
+					if old_complete < 100 and target_well['complete'] == 100:
+						send_to_subscribers(world, target_well['id'], { 'event': '{0} is complete.'.format(target_well['name']) })
+					notify(world, target_well['id'])
 		elif task['action'] == 'send':
 			send_human(world, state, task['select'])
 		elif task['action'] == 'work_field':
@@ -522,11 +536,12 @@ def draw_water(world, state, well_id, amount):
 		send(state['owner'], { 'event': '{0} is not complete yet!'.format(well['name']) })
 		return
 
-	if village['water_packs'] > 0:
-		village['water_packs'] -= 1
+	if village['free_water_packs'] > 0:
+		village['free_water_packs'] -= 1
 		notify(world, village['id'])
 		amount *= 2
 		state['water_pack'] = True
+
 	state['state'] = 'walking'
 	notify(world, state['id'])
 	walk_world_time = distance(village, well) / WALK_SPEED
@@ -542,13 +557,20 @@ def draw_water(world, state, well_id, amount):
 			notify(world, state['id'])
 			gevent.sleep(world_seconds(world, WELL_DRAW_TIME))
 			drew = True
+			contamination = max(0, int((village['waste'] - 50.0) / 8.0))
+			well['contamination'] = min(100, well['contamination'] + contamination)
+			if contamination > 0:
+				notify(world, well['id'])
+			if well['contamination'] > 20 and random.randint(0, well['contamination']) > 20:
+				state['health'] = max(1, state['health'] - 1)
+
 	state['state'] = 'walking'
 	notify(world, state['id'])
 	gevent.sleep(world_seconds(world, walk_world_time))
 	state['state'] = None
 	if state['water_pack']:
 		state['water_pack'] = False
-		village['water_pack'] -= 1
+		village['free_water_packs'] += 1
 	notify(world, state['id'])
 	if drew:
 		village['water'] += amount
