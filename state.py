@@ -33,8 +33,8 @@ class State(object):
 		i['fields'] = 0
 		i['build_material'] = 0
 		i['last_action'] = self.time + 60 * 120 # Give the user some time to figure out what's going on
-		i['x'] = random.randint(-100, 100)
-		i['y'] = random.randint(-100, 100)
+		i['x'] = random.randint(-500, 500)
+		i['y'] = random.randint(-500, 500)
 		return i
 	
 	def create_man(self, owner):
@@ -58,8 +58,9 @@ class State(object):
 	def create_well(self, owner):
 		i = self.create('well', owner)
 		i['name'] = 'Well Site {0}'.format(hex(len(self.well))[2:].upper())
-		i['x'] = random.randint(-100, 100)
-		i['y'] = random.randint(-100, 100)
+		i['x'] = random.randint(-500, 500)
+		i['y'] = random.randint(-500, 500)
+		i['queue'] = []
 		return i
 	
 	def create_child(self, owner):

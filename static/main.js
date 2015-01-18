@@ -75,10 +75,13 @@
 		var x1 = data['x'], y1 = data['y'];
 		if (x1 !== undefined && y1 !== undefined)
 		{
-			var village = world.village[village_id];
+			var village = state.world.village[state.world.village_id];
 			var x_dist = village.x - x1, y_dist = village.y - y1;
-			data.distance = Math.floor(Math.sqrt((x_dist * x_dist) + (y_dist * y_dist)));
+			var newData = $.extend({}, data);
+			newData.distance = Math.floor(Math.sqrt((x_dist * x_dist) + (y_dist * y_dist))) * 0.001;
+			return newData;
 		}
+		return data;
 	};
 
 	functions.template = function(template_selector, data)

@@ -407,10 +407,29 @@ def man(world, state):
 		health_threshold = 5
 	)
 
+def distance(a, b):
+	x_diff = a['x'] - b['x']
+	y_diff = a['y'] - b['y']
+	return (x_diff * x_diff) + (y_diff * y_diff)
+
+def draw_water(world, state, well_id, amount):
+	village = world.village[state['owner']]
+	well = world.well[well_id]
+	if village['water_packs'] > 0:
+		village['water_packs'] -= 1
+		notify(world, village['id'])
+		amount *= 2
+		state['water_pack'] = True
+	state['state'] = 'walking'
+	notify(world, state['id'])
+	gevent.sleep(world_seconds(world, distance(village, well) * 2)
+	while True:
+		
+
 def woman(world, state):
 	def perform_action(task):
 		if task['action'] == 'draw_water':
-			pass
+			draw_water(
 		elif task['action'] == 'medical_care':
 			pass
 		elif task['action'] == 'work_field':
