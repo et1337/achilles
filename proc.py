@@ -22,7 +22,7 @@ market = {
 			'display': 'Buy 5 grain',
 		},
 		{
-			'item': 'water_pack',
+			'item': 'water_packs',
 			'cost': 5000,
 			'display': 'Buy 1 H2O backpack',
 		},
@@ -40,7 +40,7 @@ market = {
 			'display': 'Sell 5 grain',
 		},
 		{
-			'item': 'water_pack',
+			'item': 'water_packs',
 			'gain': 5000,
 			'display': 'Sell 1 H2O backpack',
 		},
@@ -134,6 +134,7 @@ actions = {
 		{
 			'action': 'draw_water',
 			'display': 'Draw water (+1 H2O)',
+			'select': 'well',
 		},
 	],
 }
@@ -165,7 +166,7 @@ def init(world, id):
 			gevent.spawn(man, world, world.create_man(id))
 		for i in xrange(random.randint(3, 8)):
 			gevent.spawn(woman, world, world.create_woman(id))
-		for i in xrange(random.randint(10, 20)):
+		for i in xrange(random.randint(5, 12)):
 			gevent.spawn(child, world, world.create_child(id))
 
 	send(id,
@@ -179,7 +180,7 @@ def init(world, id):
 	})
 
 	this_village = world.village[id]
-	send(id, {'event': 'Welcome to {0}. Supplies are limited.'.format(this_village['name']) })
+	send(id, {'event': 'Welcome to {0}, Malawi.'.format(this_village['name']) })
 
 	for object_id in world.get_user_subscribed_object_ids(id):
 		send(id, world.all[object_id])
@@ -207,69 +208,69 @@ def sell(world, village, item, amount, msg):
 def action(world, user_id, data):
 	village = world.village[user_id]
 	village['last_action'] = world.time
-	if 'action' not in data:
-		print data
-	elif data['action'] == 'buy':
-		if data['item'] == 'build_material':
-			buy(world, village,
-				item = 'build_material',
-				amount = 1,
-				msg = 'You purchase enough material to construct one new hut.'
-			)
-		elif data['item'] == 'grain':
-			buy(world, village,
-				item = 'grain',
-				amount = 5,
-				msg = 'You purchase a small bag of grain.'
-			)
-		elif data['item'] == 'water':
-			buy(world, village,
-				item = 'water',
-				amount = 5,
-				msg = 'You purchase a small container of pure, clean water.'
-			)
-		elif data['item'] == 'water_packs':
-			buy(world, village,
-				item = 'water_pack',
-				amount = 1,
-				msg = 'You purchase a PackH2O water backpack.'
-			)
-	elif data['action'] == 'sell':
-		if data['item'] == 'grain':
-			sell(world, village,
-				item = 'grain',
-				amount = 5,
-				msg = 'You sell your grain at a slim but reasonable profit.'
-			)
-		elif data['item'] == 'water_packs':
-			sell(world, village,
-				item = 'water_packs',
-				amount = 1,
-				msg = 'You sell a PackH2O water backpack.'
-			)
-		elif data['item'] == 'build_material':
-			sell(world, village,
-				item = 'build_material',
-				amount = 1,
-				msg = 'You sell enough materials to build one new hut.'
-			)
-	elif 'targets' in data:
-		targets = data['targets']
-		for target_id in targets:
-			command = commands.get(target_id)
-			if command is not None:
-				command.set(data)
+	if 'action' in data:
+		if data['action'] == 'buy':
+			if data['item'] == 'build_material':
+				buy(world, village,
+					item = 'build_material',
+					amount = 1,
+					msg = 'You purchase enough material to construct one new hut.'
+				)
+			elif data['item'] == 'grain':
+				buy(world, village,
+					item = 'grain',
+					amount = 5,
+					msg = 'You purchase a small bag of grain.'
+				)
+			elif data['item'] == 'water':
+				buy(world, village,
+					item = 'water',
+					amount = 5,
+					msg = 'You purchase a small container of pure, clean water.'
+				)
+			elif data['item'] == 'water_packs':
+				buy(world, village,
+					item = 'water_packs',
+					amount = 1,
+					msg = 'You purchase a PackH2O water backpack.'
+				)
+		elif data['action'] == 'sell':
+			if data['item'] == 'grain':
+				sell(world, village,
+					item = 'grain',
+					amount = 5,
+					msg = 'You sell your grain at a slim but reasonable profit.'
+				)
+			elif data['item'] == 'water_packs':
+				sell(world, village,
+					item = 'water_packs',
+					amount = 1,
+					msg = 'You sell a PackH2O water backpack.'
+				)
+			elif data['item'] == 'build_material':
+				sell(world, village,
+					item = 'build_material',
+					amount = 1,
+					msg = 'You sell enough materials to build one new hut.'
+				)
+		elif 'targets' in data:
+			targets = data['targets']
+			for target_id in targets:
+				command = commands.get(target_id)
+				if command is not None:
+					command.set(data)
 
 # Processes
 
 def village(world, state):
+	sent_inactivity_message = False
 	while True:
-		sent_inaction_message = False
 		for _ in xrange(5):
 			gevent.sleep(world_seconds(world, 60 * 60 * 4))
-			if not sent_inaction_message and world.time - state['last_action'] > 60 * 60 * 4:
-				send(state['id'], { 'event': 'Villagers begin to grumble at the inaction of their leader.' })
-				sent_inaction_message = True
+			if not sent_inactivity_message and world.time - state['last_action'] > 60 * 60 * 11:
+				send(state['id'], { 'event': 'Villagers begin to grumble at the inactivity of their leader.' })
+				sent_inactivity_message = True
+		sent_inactivity_message = False
 
 		gevent.sleep(world_seconds(world, 60 * 60 * 2))
 
@@ -359,10 +360,10 @@ def work_field(world, state, world_time, result_amount):
 		notify(world, village['id'])
 		state['state'] = 'working'
 		notify(world, state['id'])
-		gevent.sleep(world_seconds(world_time))
+		gevent.sleep(world_seconds(world, world_time))
 		state['state'] = None
-		notify(world, state)
-		village['food'] += result_amount
+		notify(world, state['id'])
+		village['grain'] += result_amount
 		village['fields'] += 1
 		notify(world, village['id'])
 	else:
@@ -373,23 +374,23 @@ def man(world, state):
 		village = world.village[state['owner']]
 		if task['action'] == 'plow_field':
 			state['state'] = 'plowing'
-			notify(world, state)
+			notify(world, state['id'])
 			gevent.sleep(world_seconds(world, 60 * 60 * 17))
 			village['fields'] += 1
-			notify(world, village)
+			notify(world, village['id'])
 			state['state'] = None
-			notify(world, state)
+			notify(world, state['id'])
 		elif task['action'] == 'build_hut':
 			if village['build_material'] > 0:
 				village['build_material'] -= 1
-				notify(world, village)
+				notify(world, village['id'])
 				state['state'] = 'building'
-				notify(world, state)
+				notify(world, state['id'])
 				gevent.sleep(world_seconds(world, 60 * 60 * 17))
 				village['huts'] += 1
-				notify(world, village)
+				notify(world, village['id'])
 				state['state'] = None
-				notify(world, state)
+				notify(world, state['id'])
 			else:
 				send(village['id'], { 'event': 'Not enough material on hand to build a hut.' })
 		elif task['action'] == 'search_water':

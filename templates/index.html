@@ -19,13 +19,13 @@
 			Neighbor villages ({{ villages }})
 		</script>
 		<script id="template-men" type="x-tmpl-mustache">
-			Men ({{ men }})
+			Men ({{ idle_men }} idle / {{ men }} total)
 		</script>
 		<script id="template-women" type="x-tmpl-mustache">
-			Women ({{ women }})
+			Women ({{ idle_women }} idle / {{ women }} total)
 		</script>
 		<script id="template-children" type="x-tmpl-mustache">
-			Children ({{ children }})
+			Children ({{ idle_children }} idle / {{ children }} total)
 		</script>
 
 		<script id="template-village" type="x-tmpl-mustache">
@@ -41,15 +41,15 @@
 			<a id="{{ id }}" class="{{#sick}}disabled{{/sick}}{{#state}} disabled{{/state}}">{{ name }} ({{ health }} hp) {{^state}} (idle){{/state}}{{#state}} ({{ state }}){{/state}}{{#sick}} (incapacitated){{/sick}}</a>
 		</script>
 		<script id="template-well" type="x-tmpl-mustache">
-			<a id="{{ id }}">{{ id }}</a>
+			<a id="{{ id }}">{{ name }} ({{ distance }} away)</a>
 		</script>
 
 		<script id="template-items-market" type="x-tmpl-mustache">
 			{{#buy}}
-				<a class="buy" item="{{ item }}">{{ display }} (-{{ cost }})</a>
+				<a class="buy" item="{{ item }}">{{ display }} (-{{ cost }} kwacha)</a>
 			{{/buy}}
 			{{#sell}}
-				<a class="sell" item="{{ item }}">{{ display }} (+{{ gain }})</a>
+				<a class="sell" item="{{ item }}">{{ display }} (+{{ gain }} kwacha)</a>
 			{{/sell}}
 		</script>
 
@@ -76,7 +76,7 @@
 				<div class="panel level0">
 					<div class="status" id="status-village">
 						<span id="status-village-contents"></span>
-						<span class="right">
+						<span class="left">
 							<span id="time"></span>
 							<img class="pie" src="{{ url_for('static', filename='clockhand.svg') }}" />
 						</span>
@@ -99,6 +99,7 @@
 					</div>
 					<div class="items-scroll">
 						<div class="items">
+							<a class="select-all">(Select all)</a>
 						</div>
 					</div>
 				</div>
@@ -110,6 +111,7 @@
 					</div>
 					<div class="items-scroll">
 						<div class="items">
+							<a class="select-all">(Select all)</a>
 						</div>
 					</div>
 				</div>
@@ -121,6 +123,7 @@
 					</div>
 					<div class="items-scroll">
 						<div class="items">
+							<a class="select-all">(Select all)</a>
 						</div>
 					</div>
 				</div>

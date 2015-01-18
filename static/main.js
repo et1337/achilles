@@ -70,6 +70,24 @@
 		functions.update_village_status();
 	};
 
+	functions.template_preprocess = function(data)
+	{
+		var x1 = data['x'], y1 = data['y'];
+		if (x1 !== undefined && y1 !== undefined)
+		{
+			var village = world.village[village_id];
+			var x_dist = village.x - x1, y_dist = village.y - y1;
+			data.distance = Math.floor(Math.sqrt((x_dist * x_dist) + (y_dist * y_dist)));
+		}
+	};
+
+	functions.template = function(template_selector, data)
+	{
+		var preprocessed_data = functions.template_preprocess(data);
+		var template = $(template_selector).html();
+		return Mustache.render(template, preprocessed_data);
+	};
+
 	functions.init = function(data)
 	{
 		$('#events').html('');
@@ -78,11 +96,11 @@
 		for (var id in all)
 			functions.delete(all[id])
 
-		$('#market .items').html(Mustache.render($('#template-items-market').html(), data.market));
-		$('#actions-village .items').html(Mustache.render($('#template-action-items').html(), data.actions.village));
-		$('#actions-man .items').html(Mustache.render($('#template-action-items').html(), data.actions.man));
-		$('#actions-woman .items').html(Mustache.render($('#template-action-items').html(), data.actions.woman));
-		$('#actions-child .items').html(Mustache.render($('#template-action-items').html(), data.actions.child));
+		$('#market .items').html(functions.template('#template-items-market', data.market));
+		$('#actions-village .items').html(functions.template('#template-action-items', data.actions.village));
+		$('#actions-man .items').html(functions.template('#template-action-items', data.actions.man));
+		$('#actions-woman .items').html(functions.template('#template-action-items', data.actions.woman));
+		$('#actions-child .items').html(functions.template('#template-action-items', data.actions.child));
 		$('.actions a').click(function() { functions.action($(this).attr('action'), $(this).attr('select')) });
 		$('#market .items .buy').click(function() { functions.buy($(this).attr('item')) });
 		$('#market .items .sell').click(function() { functions.sell($(this).attr('item')) });
@@ -115,24 +133,27 @@
 			functions.send(
 			{
 				'action': action,
-				targets: Object.keys(state.ui.selected),
+				'targets': Object.keys(state.ui.selected),
 			});
+			functions.back(1);
 		}
 	};
 
 	functions.buy = function(item)
 	{
-		functions.send({
-			action: 'buy',
-			item: item,
+		functions.send(
+		{
+			'action': 'buy',
+			'item': item,
 		});
 	};
 
 	functions.sell = function(item)
 	{
-		functions.send({
-			action: 'sell',
-			item: item,
+		functions.send(
+		{
+			'action': 'sell',
+			'item': item,
 		});
 	};
 
@@ -151,22 +172,69 @@
 		var village = state.world.village[state.world.village_id];
 		if (village)
 		{
+			var men = 0, idle_men = 0;
+			for (var man_id in state.world.man)
+			{
+				men++;
+				if (state.world.man[man_id]['state'] == null)
+					idle_men++;
+			}
+
+			var women = 0, idle_women = 0;
+			for (var woman_id in state.world.woman)
+			{
+				women++;
+				if (state.world.woman[woman_id]['state'] == null)
+					idle_women++;
+			}
+
+			var children = 0, idle_children = 0;
+			for (var child_id in state.world.child)
+			{
+				children++;
+				if (state.world.child[child_id]['state'] == null)
+					idle_children++;
+			}
+
 			var data = {
-				village: village,
-				time: state.ui.time,
-				villages: Object.keys(state.world.village).length - 1,
-				wells: Object.keys(state.world.well).length,
-				men: Object.keys(state.world.man).length,
-				women: Object.keys(state.world.woman).length,
-				children: Object.keys(state.world.child).length,
+				'village': village,
+				'time': state.ui.time,
+				'villages': Object.keys(state.world.village).length - 1,
+				'wells': Object.keys(state.world.well).length,
+				'men': men,
+				'idle_men': idle_men,
+				'women': women,
+				'idle_women': idle_women,
+				'children': children,
+				'idle_children': idle_children,
 			};
 			$('.village-name').text(village.name);
-			$('#status-village-contents').html(Mustache.render($('#template-main-village').html(), data));
-			$('#button-villages').html(Mustache.render($('#template-villages').html(), data));
-			$('#button-men').html(Mustache.render($('#template-men').html(), data));
-			$('#button-women').html(Mustache.render($('#template-women').html(), data));
-			$('#button-children').html(Mustache.render($('#template-children').html(), data));
+			$('#status-village-contents').html(functions.template('#template-main-village', data));
+			$('#button-villages').html(functions.template('#template-villages', data));
+			$('#button-men').html(functions.template('#template-men', data));
+			$('#button-women').html(functions.template('#template-women', data));
+			$('#button-children').html(functions.template('#template-children', data));
 			$('.status:not(#status-village)').css('height', $('#status-village').height());
+		}
+		functions.update_next_button_state();
+	};
+
+	functions.toggle_select_all = function($selector)
+	{
+		var $total = $selector.filter(':not(.disabled)');
+		var $selected = $selector.filter('.selected');
+		if ($selected.length > $total.length - $selected.length) // Deselect all
+		{
+			state.ui.selected = {};
+			$selected.removeClass('selected');
+		}
+		else
+		{
+			$total.addClass('selected');
+			$total.each(function()
+			{
+				state.ui.selected[$(this).attr('id')] = true;
+			});
 		}
 		functions.update_next_button_state();
 	};
@@ -180,6 +248,7 @@
 
 	functions.back = function(to_level)
 	{
+		state.ui.current_action = null;
 		if (to_level === undefined)
 			state.ui.level--;
 		else
@@ -204,15 +273,19 @@
 	{
 		if (data.id != state.world.village_id)
 		{
-			var newHtml = Mustache.render($('#template-' + data.type).html(), data);
-			var $newElement = $(newHtml);
+			var $newElement = $(functions.template('#template-' + data.type, data));
 			if (state.world.all[data.id])
 				$('#' + data.id).replaceWith($newElement);
 			else
 				$('#' + data.type + ' .items').append($newElement);
-			functions.bind_object_handlers(data.id, $newElement);
+			functions.bind_object_handlers($newElement);
 			if (state.ui.selected[data.id])
-				$newElement.addClass('selected');
+			{
+				if ($newElement.hasClass('disabled'))
+					delete state.ui.selected[data.id];
+				else
+					$newElement.addClass('selected');
+			}
 		}
 		state.world.all[data.id] = data;
 		state.world[data.type][data.id] = data;
@@ -255,24 +328,26 @@
 		$('#actions-man-next').click(function() { if (!$(this).hasClass('disabled')) functions.next('#actions-man') });
 		$('#actions-woman-next').click(function() { if (!$(this).hasClass('disabled')) functions.next('#actions-woman') });
 		$('#actions-child-next').click(function() { if (!$(this).hasClass('disabled')) functions.next('#actions-child') });
+		$('.select-all').click(function() { functions.toggle_select_all($(this).siblings()) });
 	};
 
-	functions.bind_object_handlers = function(id, $object)
+	functions.bind_object_handlers = function($object)
 	{
-		$object.click(function() { functions.select(id, $object) });
+		$object.click(function() { functions.select($object) });
 	};
 
-	functions.select = function(id, $object)
+	functions.select = function($object)
 	{
 		if (!$object.hasClass('disabled'))
 		{
-			if (state.ui.level == 3)
+			var id = $object.attr('id');
+			if (state.ui.level == 3 && state.ui.current_action)
 			{
 				functions.send(
 				{
 					'action': state.ui.current_action,
-					targets: Object.keys(state.ui.selected),
-					select: id,
+					'targets': Object.keys(state.ui.selected),
+					'select': id,
 				});
 				functions.back(1);
 			}
