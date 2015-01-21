@@ -8,8 +8,8 @@ Achilles
 Water Jam
 =========
 
-Achilles is a game written in 48 hours as an entry for the 2014
-[CivicHacks](http://civichacks.org) Game Jam.
+Achilles is a game written in 48 hours as an entry for the
+[CivicHacks](http://civichacks.org) Game Jam for Good.
 
 The goal was to raise awareness of the global water crisis and ultimately
 promote [PackH2O](http://www.packh2o.com/), a Columbus-based startup that
